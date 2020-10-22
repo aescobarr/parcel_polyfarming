@@ -1,0 +1,83 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="favicon.ico">
+    {% block extra_css %}
+    <style>
+        body {
+            padding-top: 3.5rem;
+        }
+        #map { height: 800px; }
+    </style>
+    {% endblock %}
+    <title>{% block title %}Map{% endblock %}</title>
+    {% load bootstrap4 %}
+    {# CSS Bootstrap #}
+    {% bootstrap_css %}
+    <link href="{% static 'main/leaflet/leaflet.css' %}" rel="stylesheet">
+    <link href="{% static 'main/Leaflet.Draw.static/src/leaflet.draw.css' %}" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
+            aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="{% url 'index' %}">Inici <span class="sr-only">(current)</span></a>
+            </li>
+        </ul>
+    </div>
+</nav>
+<main role="main">
+{% block main %}
+<div id="map"></div>
+{% endblock %}
+</main>
+
+    <footer class="container">
+      <!--<p>&copy; Company 2017-2018</p>-->
+    </footer>
+{% bootstrap_javascript jquery='full' %}
+<script src="{% static 'main/leaflet/leaflet.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/Leaflet.draw.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/Leaflet.Draw.Event.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/Toolbar.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/Tooltip.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/ext/GeometryUtil.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/ext/LatLngUtil.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/ext/LineUtil.Intersect.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/ext/Polygon.Intersect.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/ext/Polyline.Intersect.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/ext/TouchEvents.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/draw/DrawToolbar.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/draw/handler/Draw.Feature.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/draw/handler/Draw.SimpleShape.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/draw/handler/Draw.Polyline.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/draw/handler/Draw.Marker.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/draw/handler/Draw.Circle.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/draw/handler/Draw.CircleMarker.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/draw/handler/Draw.Polygon.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/draw/handler/Draw.Rectangle.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/edit/EditToolbar.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/edit/handler/EditToolbar.Edit.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/edit/handler/EditToolbar.Delete.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/Control.Draw.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/edit/handler/Edit.Poly.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/edit/handler/Edit.SimpleShape.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/edit/handler/Edit.Rectangle.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/edit/handler/Edit.Marker.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/edit/handler/Edit.CircleMarker.js' %}"></script>
+<script src="{% static 'main/Leaflet.Draw.static/src/edit/handler/Edit.Circle.js' %}"></script>
+<script src="{% static 'main/main.js' %}"></script>
+</body>
+</html>
