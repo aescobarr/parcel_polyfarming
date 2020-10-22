@@ -1,0 +1,11 @@
+parcel_polyfarming/settings_local.py
+parcel_polyfarming/settings_local*
+*.csv
+*.log.*
+*.log
+*pyc
+*.egg-info
+.idea/*
+*.sublime-project
+*.sublime-workspace
+*.sublime*
