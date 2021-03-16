@@ -36,11 +36,11 @@ $(document).ready(function() {
 
 	var editableLayers = new L.FeatureGroup();
 
-	editableLayers.eachLayer(function(layer) {
-        layer.on('click', function(){
-            alert(this._leaflet_id);
-        });
-    });
+//	editableLayers.eachLayer(function(layer) {
+//        layer.on('click', function(){
+//            alert(this._leaflet_id);
+//        });
+//    });
 
     var draw_options = {
       position: 'topleft',
@@ -50,14 +50,14 @@ $(document).ready(function() {
               allowIntersection: false, // Restricts shapes to simple polygons
               drawError: {
                   color: '#FF0000', // Color the shape will turn when intersects
-                  message: '<strong>Oh snap!<strong> you can\'t draw that!' // Message that will show when intersect
+                  message: '<strong>Error:<strong> Dibujo no vááááááááááááááálido.' // Message that will show when intersect
               },
               shapeOptions: {
                   color: '#33cc33'
               }
           },
           circle: false,
-          rectangle: true,
+          rectangle: false,
           marker: false,
           circlemarker: false
       },
@@ -75,11 +75,42 @@ $(document).ready(function() {
     map.on(L.Draw.Event.CREATED, function (e) {
         var type = e.layerType,layer = e.layer;
         editableLayers.addLayer(layer);
-        layer.on('click', function(){
-            alert(this._leaflet_id);
-        });
+//        layer.on('click', function(){
+//            alert(this._leaflet_id);
+//        });
         var string_json = JSON.stringify(editableLayers.toGeoJSON());
         console.log(string_json);
+        $.confirm({
+            title: 'Crear parcela',
+            content: 'Deseas crear esta parcela?',
+            buttons: {
+                confirm: {
+                    text: 'Si',
+                    btnClass: 'btn-blue',
+                    action: function(){
+                        $.ajax({
+                            dataType: "json",
+                            url: "/formulario_parcela_nuevo/",
+                            method: "POST", //<-- Necesario el token_ajax.js
+                            data:{"geom":string_json},
+                            success: function(data) {
+                                alert("Parcela creada!");
+                            },
+                            error: function(data){
+                               alert(data.responseJSON.error); // the message
+                            }
+                        });
+                    }
+                },
+                cancel: {
+                    text: 'No',
+                    btnClass: 'btn-red',
+                    action: function(){
+                        $.alert('Canceled!');
+                    }
+                }
+            }
+        });
     });
 
     map.on(L.Draw.Event.EDITED, function(e){
