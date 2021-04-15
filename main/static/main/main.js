@@ -1,125 +1,153 @@
+var cargando;
 $(document).ready(function() {
+    $("#id_dia_entrada").datepicker({ dateFormat: 'dd-mm-yy' , TimePicker: false});
+    $("#id_dia_salida").datepicker({ dateFormat: 'dd-mm-yy' , TimePicker: false});
 
-    var base = L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
-        maxZoom: 18,
-        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
-            '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
-            'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-        id: 'mapbox.streets'
-    });
-
-    var ign = new L.TileLayer('http://www.ign.es/wmts/mapa-raster?service=WMTS&request=GetTile&version=1.0.0&layers=&styles=&tilematrixSet=GoogleMapsCompatible&format=image/jpeg&height=256&width=256&layer=MTN&style=default&tilematrix={z}&tilerow={y}&tilecol={x}',{
-        maxZoom: 18,
-        minZoom: 0,
-        continuousWorld: true,
-        attribution: 'Capa Raster CC BY 4.0 <a href="http://www.ign.es/web/ign/portal">ign.es</a>'
-    });
-
-    var orto25k_icc = L.tileLayer.wms('http://geoserveis.icgc.cat/icc_mapesbase/wms/service?', {
-        layers: 'orto25m',
-        transparent: true
-    });
-
-    var baseLayers = {
-		"IGN": ign,
-		"Ortofotos 25k ICC": orto25k_icc,
-		"Open street map": base
-	};
-
-	var map = L.map('map', {
-            center: [40.0000000, -4.0000000],
-            zoom: 6,
-            layers: [base,orto25k_icc,ign]
-    });
-
-	L.control.layers(baseLayers).addTo(map);
-
-	var editableLayers = new L.FeatureGroup();
-
-//	editableLayers.eachLayer(function(layer) {
-//        layer.on('click', function(){
-//            alert(this._leaflet_id);
-//        });
-//    });
-
-    var draw_options = {
-      position: 'topleft',
-      draw: {
-          polyline: false,
-          polygon: {
-              allowIntersection: false, // Restricts shapes to simple polygons
-              drawError: {
-                  color: '#FF0000', // Color the shape will turn when intersects
-                  message: '<strong>Error:<strong> Dibujo no vááááááááááááááálido.' // Message that will show when intersect
-              },
-              shapeOptions: {
-                  color: '#33cc33'
-              }
-          },
-          circle: false,
-          rectangle: false,
-          marker: false,
-          circlemarker: false
-      },
-      edit: {
-          featureGroup: editableLayers,
-          remove: true
-      }
-    };
-
-    var drawControl = new L.Control.Draw(draw_options);
-    map.addLayer(editableLayers);
-    map.addControl(drawControl);
-
-
-    map.on(L.Draw.Event.CREATED, function (e) {
-        var type = e.layerType,layer = e.layer;
-        editableLayers.addLayer(layer);
-//        layer.on('click', function(){
-//            alert(this._leaflet_id);
-//        });
-        var string_json = JSON.stringify(editableLayers.toGeoJSON());
-        console.log(string_json);
-        $.confirm({
-            title: 'Crear parcela',
-            content: 'Deseas crear esta parcela?',
-            buttons: {
-                confirm: {
-                    text: 'Si',
-                    btnClass: 'btn-blue',
-                    action: function(){
-                        $.ajax({
-                            dataType: "json",
-                            url: "/formulario_parcela_nuevo/",
-                            method: "POST", //<-- Necesario el token_ajax.js
-                            data:{"geom":string_json},
-                            success: function(data) {
-                                alert("Parcela creada!");
-                            },
-                            error: function(data){
-                               alert(data.responseJSON.error); // the message
-                            }
-                        });
-                    }
-                },
-                cancel: {
-                    text: 'No',
-                    btnClass: 'btn-red',
-                    action: function(){
-                        $.alert('Canceled!');
-                    }
-                }
+    cargando = $.alert({
+        closeIcon: false,
+        icon: 'fa fa-spinner fa-spin',
+        title: 'Cargando parcelas de usuario...',
+        content: '',
+        buttons: {
+            buttonA: {
+                text: '',
+                isHidden: true
             }
+        }
+    });
+
+    $.ajax({
+        type: "POST",
+        url: "/gparcelas",
+        success: function(data) {
+            mostrar_panel_parcela();
+            $.each(data, function(k,v){
+                console.log(v);
+                crear_wkt(v["geom"],v["num_parcela"]);
+                //data(v["geom"]);
+            });
+            recalc_tooltips();
+            activar_clicar();
+            map.setView([41.666141,1.761932], 8);
+            cargando.close();
+        },
+        error: function (data){
+            alert("Error:"+data);
+           console.log(data); // the message
+           map.setView([41.666141,1.761932], 8);
+        }
+    });
+    // restore
+//    console.log(parcelas["fields"]);
+//    if(parcelas.length > 0){ //si el usuario tiene alguna parcela
+//        $.each(parcelas, function(k,v){
+//            console.log(v);
+//            //data(v["geom"]);
+//        });
+//    }
+    //L.geoJSON(JSON.parse(shape_for_db)).addTo(mymap);
+});
+
+function pasar_wkt(){ // pasa las geometrias a wkt
+    var geojson = editableLayers.toGeoJSON();
+    var wicket = new Wkt.Wkt();
+    wicked.read( JSON.stringify(geojson.features[0].geometry) );
+    //console.log(wkt.write());
+    return wicket.write();
+}
+
+function crear_wkt(geom,num_parcela){
+    //Dibujar WKT
+    var wicket = new Wkt.Wkt();
+    wicket.read(geom);
+    var geom_obj = wicket.toObject();//{icon: greenIcon}
+    //asignar parcela al objeto
+    geom_obj.num_parcela = num_parcela;
+    //
+    editableLayers.addLayer(geom_obj);
+}
+
+function mostrar_panel_parcela(){
+    if($("#panel_parcela").is(":hidden")){
+        $("#panel_parcela").show("slide",{"direction":"right"},1000);
+        $("#mapa").removeClass("col-md-offset-4");
+    }else{
+        $("#panel_parcela").hide("slide",{"direction":"left"},1000);
+        $("#mapa").addClass("col-md-offset-4");
+    }
+
+}
+
+function activar_clicar(){
+    editableLayers.eachLayer(function(layer) {
+        layer.on('click', function(){
+//            console.log(this);
+//            alert(this._leaflet_id);
+//            alert(this.num_parcela);
+            $.ajax({
+                type: "POST",
+                url: "/ginfoparcela",
+                data:{"num_parcela":this.num_parcela},
+                success: function(data) {
+                    $("#id_num_parcela").val(data["num_parcela"]);
+                    $("#id_dia_entrada").val(data["dia_entrada"]);
+                    $("#id_dia_salida").val(data["dia_salida"]);
+                    mostrar_panel_parcela();
+                },
+                error: function (data){
+                    console.log(data);
+                    alert("Error:"+data["Error"]);
+                }
+            });
         });
     });
-
-    map.on(L.Draw.Event.EDITED, function(e){
-        var string_json = JSON.stringify(editableLayers.toGeoJSON());
-        console.log(string_json);
+}
+//function recalc_tooltips(){
+//    editableLayers.eachLayer(function(layer) {
+//    console.log(layer);
+//      //var fontSize = layer.features.properties.area / map.getZoom() * 30000;
+//      if(map.getZoom() >= 9) {
+//        layer.bindTooltip("<span style='font-size: " + 1 + "px'>" + layer.num_parcela + "</span>", {
+//          className: "label",
+//          permanent: true,
+//          direction: "center"
+//        });//.openTooltip();
+//       }
+//    });
+//}
+$("#formulario").submit(function(e){ //Si se edita una Parcela
+    var form = $(this);
+    //if(validar_form(form)){
+    $.ajax({
+                url: '/formulario_parcela_edit',
+                type: 'POST',
+                data: form.serialize(),//+"&geom="+edited_parcela_geom,
+                success: function(data) {
+                    alert("Cambios aplicados con éxito!");
+                },
+                error: function (data){
+                   alert(data);
+                   console.log(data); // the message
+                }
     });
-
-    map.on(L.Draw.Event.DELETED, function(e){
-        console.log("eliminado");
-    });
-
+    edited_parcela_geom="";
+    //}
+    e.preventDefault(); //para no ejecutar el actual submit del form
 });
+
+$("#id_num_parcela").on("input", function(){
+        var valor_inicial = $("#id_num_parcela").val();
+        $.ajax({
+                url: '/check_n_parcela',
+                type: 'POST',
+                data: form.serialize(),//+"&geom="+edited_parcela_geom,
+                success: function(data) {
+                    alert("Disponible");
+                },
+                error: function (data){
+                   alert("Error: Este numero de parcela ya existe.");
+                   $("#id_num_parcela").val(valor_inicial);
+                }
+
+        });
+})

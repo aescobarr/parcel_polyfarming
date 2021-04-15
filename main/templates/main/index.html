@@ -27,16 +27,20 @@
 <body>
 {% block cabecera %} {% include "main/cabecera.html" %} {% endblock %}
 <main role="main">
+<!--    <script>-->
+<!--        var parcelas = JSON.parse('{{ parcelas | escapejs }}');-->
+<!--    </script>-->
+
     <div class="row">
     {% block main %}
-    <div id="mapa" class="col-md-8">
+    <div id="mapa" class="col-md-8 col-md-offset-4">
         <div id="map"></div>
     </div>
     {% endblock %}
     {% block form %}
-    {% csrf_token %}
-    <div class="col-md-4">
+    <div id="panel_parcela" class="col-md-4">
     <form id="formulario" action="/formulario_parcela/" method="post">
+            {% csrf_token %}
             <div class="row">
                     <span class="input-group-addon"><b>Nº de parcela</b></span>
                     {{ form.num_parcela }}
@@ -114,6 +118,14 @@
                     {{ form.num_balas.errors }}
                 </div>
             </div>
+            <div class="row">
+                <button class="btn btn-success" type="submit" title="Guardar" href="#">
+                    <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>Guardar
+                </button>
+                <button class="btn btn-danger" title="Cancelar" href="#" onclick='mostrar_panel_parcela();'>
+                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>Cancelar
+                </button>
+            </div>
     </form>
     </div>
     {% endblock %}
@@ -154,7 +166,17 @@
 <script src="{% static 'main/Leaflet.Draw.static/src/edit/handler/Edit.Marker.js' %}"></script>
 <script src="{% static 'main/Leaflet.Draw.static/src/edit/handler/Edit.CircleMarker.js' %}"></script>
 <script src="{% static 'main/Leaflet.Draw.static/src/edit/handler/Edit.Circle.js' %}"></script>
+<!--<script src="{% static 'main/js-cookie-master/src/js.cookie.js' %}"></script>-->
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+<script src="{% static 'main/jquery-ui-1.12.1.custom/jquery-ui.min.js' %}"></script>
+<script src="{% static 'main/funciones_leaflet.js' %}"></script>
+<script src="{% static 'main/token.js' %}"></script>
+<!--WICKET (PASAR DE GEOJSON A WKT)-->
+<script src="{% static 'main/Wicket-master/wicket.js' %}"></script>
+<script src="{% static 'main/Wicket-master/wicket-leaflet.js' %}"></script>
+<!----->
 <script src="{% static 'main/main.js' %}"></script>
+
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
