@@ -1,6 +1,7 @@
 var editableLayers;
 var edited_parcela_geom;
 var map;
+var layer_editada;
 $(document).ready(function() {
 
     var base = L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
@@ -46,37 +47,87 @@ $(document).ready(function() {
     //        });
     //    });
 
-    var draw_options = {
+//    var draw_options = {
+//      position: 'topleft',
+//      draw: {
+//          polyline: false,
+//          polygon: {
+//              allowIntersection: false, // Restricts shapes to simple polygons
+//              drawError: {
+//                  color: '#FF0000', // Color the shape will turn when intersects
+//                  message: '<strong>Error:<strong> Dibujo no válido.' // Message that will show when intersect
+//              },
+//              shapeOptions: {
+//                  color: '#33cc33'
+//              }
+//          },
+//          circle: false,
+//          rectangle: false,
+//          marker: false,
+//          circlemarker: false
+//      },
+//      edit: {
+//          featureGroup: editableLayers,
+//          remove: true
+//      }
+//    };
+//
+//    var drawControl = new L.Control.Draw(draw_options);
+
+    //////---------
+    // CREAR BARRA DE CONTROL(con leaflet GEOMAN)
+    map.pm.addControls({
       position: 'topleft',
-      draw: {
-          polyline: false,
-          polygon: {
-              allowIntersection: false, // Restricts shapes to simple polygons
-              drawError: {
-                  color: '#FF0000', // Color the shape will turn when intersects
-                  message: '<strong>Error:<strong> Dibujo no válido.' // Message that will show when intersect
-              },
-              shapeOptions: {
-                  color: '#33cc33'
-              }
-          },
-          circle: false,
-          rectangle: false,
-          marker: false,
-          circlemarker: false
+      drawMarker: false,
+      drawCircleMarker: false,
+      drawPolyline: false,
+      drawRectangle: false,
+      drawCircle: false,
+      dragMode: false,
+      cutPolygon: false,
+      allowSelfIntersection: false,
+      removalMode: false
+
+    });
+    //traducción
+    const customTranslation = {
+      "tooltips": {
+        "firstVertex": "",
+        "continueLine": "",
+        "finishPoly": "Clica el primer punto cuando desees acabar",
       },
-      edit: {
-          featureGroup: editableLayers,
-          remove: true
+      "actions": {
+        "finish": "Finalizar",
+        "cancel": "Cancelar",
+        "removeLastVertex": "Quitar último punto"
+      },
+      "buttonTitles": {
+        "drawPolyButton": "Crear nueva parcela",
+        "editButton": "Editar una parcela",
+        "deleteButton": "Eliminar una parcela",
       }
     };
+    map.pm.setLang('polyfarminges', customTranslation, 'es');
+    //
+    //Añadir la accion cancelar a la opcion de editar
+    const acciones = [
+    'finishMode',
+    { text: 'Cancelar', onClick: () => cancelar_edicion() }
+    ]
 
-    var drawControl = new L.Control.Draw(draw_options);
+    map.pm.Toolbar.changeActionsOfControl('editMode', acciones);
+    //////-------
     map.addLayer(editableLayers);
-    map.addControl(drawControl);
+    //map.addControl(drawControl);
 
 
-    map.on(L.Draw.Event.CREATED, function (e) {
+    map.on('pm:create', function(e){//map.on(L.Draw.Event.CREATED, function (e) {
+//        e.layer.on('pm:edit', function(e){layer_editada = e;});//Cuando se edita algo de una layer
+        e.layer.on('pm:update', function(e){//Cuando se ha terminado de editar
+            editar_layer(e);
+            layer_editada = e;
+        })
+
         console.log(e);
         var type = e.layerType,layer = e.layer;
         editableLayers.addLayer(layer);
@@ -108,6 +159,7 @@ $(document).ready(function() {
 //                                console.log(data);
                                 $("#id_num_parcela").val(data["num_parcela"]);
                                 layer.num_parcela = data["num_parcela"];
+                                layer.valor_inicial=layer["_latlngs"];
                                 activar_clicar();
                                 //layer.bindTooltip("my tooltip text").openTooltip();
                                 layer.bindTooltip(""+data["num_parcela"],{permanent: true, direction:"center", interactive:false});//.openTooltip()
@@ -133,14 +185,40 @@ $(document).ready(function() {
         });
     });
 
-    map.on(L.Draw.Event.EDITED, function(e){
-        var editedlayers = e.layers;
-        var layer;
-        editedlayers.eachLayer(function(l) { // En el caso de editar se necesita hacer esto para obtener la layer
-            layer = l;
-        });
-        console.log(layer);
-        var string_json = JSON.stringify(editableLayers.toGeoJSON());
+//    map.on(L.Draw.Event.DELETED, function(e){
+//        alert("eliminado");
+//    });
+//    //ocultar panel por defecto
+//    $(".leaflet-draw-section:first").attr("hidden","true");
+});
+
+function recalc_tooltips(){
+    editableLayers.eachLayer(function(layer) {
+        //layer.popup().setLatLng(layer.getCenter()).setContent("X").openOn(map);
+
+        layer.unbindTooltip();
+        //console.log(layer.getCenter());
+    //console.log(layer);
+//      var fontSize = 2 * map.getZoom();
+//      if(fontSize >= 10) {
+        layer.bindTooltip(""+layer.num_parcela,{//"<span style='font-size: " + fontSize + "px'>" + layer.num_parcela + "</span>", {
+          permanent: true,
+          //interactive: false,
+          direction: "center",
+          //offset:[layer.getCenter()["lat"],layer.getCenter()["lng"]]
+        });//.openTooltip();
+//       }
+    });
+}
+
+function editar_layer(layer){ //map.on('pm:edit', function(e){//map.on(L.Draw.Event.EDITED, function(e){
+        //var editedlayers = e.layers;
+        //var layer;
+        //editedlayers.eachLayer(function(l) { // En el caso de editar se necesita hacer esto para obtener la layer
+        //    layer = l;
+        //});
+//        console.log(layer);
+//        var string_json = JSON.stringify(editableLayers.toGeoJSON());
 //        console.log(string_json);
         $.confirm({
             title: 'Editar parcela',
@@ -150,21 +228,21 @@ $(document).ready(function() {
                     text: 'Si',
                     btnClass: 'btn-blue',
                     action: function(){
-                        var geojson = layer.toGeoJSON();
+                        var geojson = layer.layer.toGeoJSON();
                         var wkt = new Wkt.Wkt();
-                        wkt.read( JSON.stringify(geojson));
-                        edited_parcela_geom = wkt.write();
-                        //.features[0].geometry)
+                        wkt.read(JSON.stringify(geojson));
                         $.ajax({
                             type: "POST", //<-- Necesario el token_ajax.js
                             //dataType: "json",
                             url: "/editar_parcela_geom",
-                            data:{'num_parcela':layer.num_parcela,'geom_wkt':wkt.write()},
+                            data:{'num_parcela':layer.layer.num_parcela,'geom_wkt':wkt.write()},
                             success: function(data) {
-                                alert("Parcela editada.");
+                                alert("Parcela editada con éxito.");
+//                                recalc_tooltips();
                                 mostrar_panel_parcela();
                                 activar_clicar();
-                                layer.bindTooltip(""+layer.num_parcela,{permanent: true, direction:"center", interactive:false});//.openTooltip()
+                                layer.layer.unbindTooltip();
+                                layer.layer.bindTooltip(""+layer.layer.num_parcela,{permanent: true, direction:"center", interactive:false});//.openTooltip()
                             },
                             error: function (data){
                                alert(data);
@@ -183,34 +261,12 @@ $(document).ready(function() {
                 }
             }
         });
-    });
+    }
 
-    map.on(L.Draw.Event.DELETED, function(e){
-        alert("eliminado");
-    });
-
-    map.on('zoomend', function() {//cuando se haga mucho zoom, recalcular posición de los toolips para que aparezcan en el centro de cada polígono
-        if(map.getZoom() == 10){
-            //recalc_tooltips();
-        }
-    });
-});
-
-function recalc_tooltips(){
-    editableLayers.eachLayer(function(layer) {
-        //layer.popup().setLatLng(layer.getCenter()).setContent("X").openOn(map);
-
-        layer.unbindTooltip();
-        console.log(layer.getCenter());
-    //console.log(layer);
-//      var fontSize = 2 * map.getZoom();
-//      if(fontSize >= 10) {
-        layer.bindTooltip(""+layer.num_parcela,{//"<span style='font-size: " + fontSize + "px'>" + layer.num_parcela + "</span>", {
-          permanent: true,
-          //interactive: false,
-          direction: "center",
-          //offset:[layer.getCenter()["lat"],layer.getCenter()["lng"]]
-        });//.openTooltip();
-//       }
-    });
+function cancelar_edicion(){
+    location.reload();
+//    console.log(layer_editada._latlngs);
+//    console.log(layer_editada.valor_inicial);
+//    layer_editada._latlngs = layer_editada.valor_inicial;
+//    layer_editada.redraw();
 }

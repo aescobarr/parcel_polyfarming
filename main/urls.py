@@ -9,6 +9,7 @@ urlpatterns = [
     path('formulario_parcela_edit', views.guardar_editar_parcela),
     path('formulario_parcela_nueva', views.guardar_nueva_parcela),
     path('editar_parcela_geom', views.editar_geom_parcela),
+    path('eliminar_parcela', views.eliminar_parcela),
     path('ginfoparcela', views.GetInfoParcela),#para obtener toda la info de la parcela al clicarla
     path('gparcelas', views.GetParcelas),#para obtener la info básica que mostrar en el mapa
     path('check_n_parcela', views.check_n_parcela),

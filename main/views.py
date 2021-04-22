@@ -143,6 +143,24 @@ def editar_geom_parcela(request):
         response.status_code = 400
         return response
 
+def eliminar_parcela(request):
+    try:
+        if request.method == 'POST':
+            usuario = request.user
+            try:#mirar si existe la parcela antes de editarla
+                id = Parcelas.objects.get(usuario=usuario, num_parcela=request.POST["num_parcela"]).id
+                instancia = get_object_or_404(Parcelas, id=id)
+                instancia.delete()
+                return HttpResponse("{}", content_type='application/json;')
+            except:
+                response = JsonResponse({"error": "Error: Intentando eliminar una parcela no detectada."})
+                response.status_code = 400
+                return response
+    except:
+        response = JsonResponse({"error": "Error al borrar la parcela."})
+        response.status_code = 400
+        return response
+
 
 def GetParcelas(request):
     parcelas = Parcelas.objects.filter(usuario=request.user).order_by('num_parcela')
@@ -197,7 +215,7 @@ def logout(request):
 def check_n_parcela(request): #al modificar un num_parcela, comprueba dinámicamente si esa parcela ya existe
     try:
         if request.method == 'POST':
-            if(Parcelas.objects.filter(usuario=request.user, num_parcela=request.POST["num_parcela"]).exists()):
+            if(Parcelas.objects.filter(usuario=request.user, num_parcela=request.POST["num_parcela"]).exists() == False):
                 return HttpResponse("{}", content_type='application/json;')
         #si llega hasta aquí es que si existe ya dicha parcela
         response = JsonResponse({"Error": "El nº de parcela introducido ya existe."})

@@ -8,49 +8,86 @@
     <meta name="description" content="">
     <meta name="author" content="">
     <link rel="icon" href="favicon.ico">
-    {% block extra_css %}
-    <style>
-        body {
-            padding-top: 3.5rem;
-        }
-        #map { height: 800px; }
-
-    </style>
-    {% endblock %}
     <title>{% block title %}Map{% endblock %}</title>
     {% load bootstrap4 %}
     {# CSS Bootstrap #}
     {% bootstrap_css %}
     <link href="{% static 'main/leaflet/leaflet.css' %}" rel="stylesheet">
     <link href="{% static 'main/Leaflet.Draw.static/src/leaflet.draw.css' %}" rel="stylesheet">
+    <link href="{% static 'main/leaflet-geoman/leaflet-geoman.css' %}" rel="stylesheet">
+    <script src="{% static 'main/jquery-ui-1.12.1.custom/jquery-ui.min.css' %}"></script>
+    {% block extra_css %}
+    <style>
+        #cabecera {
+        position:absolute;
+        top:0;
+        left:0;
+        height:10%;
+        width:100%;
+        }
+        #map, #panel_parcela {
+            position: absolute;
+            top:10%;
+            left:0;
+            height: 90%;
+            width:100%;
+        }
+        .leaflet-pm-toolbar .leaflet-pm-icon-polygon {
+          background-image: url('{% static 'main/leaflet-geoman/customicons/Polygon.png' %}');
+        }
+
+        .leaflet-control-zoom-in {
+          background-image: url('{% static 'main/leaflet-geoman/customicons/Zoomin.png' %}');
+        }
+        .leaflet-control-zoom-out {
+          background-image: url('{% static 'main/leaflet-geoman/customicons/Zoomout.png' %}');
+        }
+        .ui-dialog { z-index: 1000; background:white}
+    </style>
+<!--       body {-->
+<!--            padding-top: 3.5rem;-->
+<!--        }-->
+    <!--    #map { height: 800px; }-->
+    {% endblock %}
 </head>
 <body>
 {% block cabecera %} {% include "main/cabecera.html" %} {% endblock %}
+<div id="map"></div>
 <main role="main">
-<!--    <script>-->
-<!--        var parcelas = JSON.parse('{{ parcelas | escapejs }}');-->
-<!--    </script>-->
-
-    <div class="row">
+    <!--    <script>-->
+    <!--        var parcelas = JSON.parse('{{ parcelas | escapejs }}');-->
+    <!--    </script>-->
+    <!--    <div id="herramientas">-->
+    <!--        <div class="row col-md-8 offset-md-2">-->
+    <!--           <div id="herramienta_crear" class="col-md-3 boton_herramientas"><a href="#!" class="btn btn-secondary btn-lg active btn-block" title="Dibujar un polígono que contendrá la parcela." onclick=""><i class="fa fa-star fa-lg"></i>  Dibujar Parcela</a></div><br>-->
+    <!--           <div id="herramienta_editar" class="col-md-3 offset-md-1 boton_herramientas"><a href="#!" class="btn btn-secondary btn-lg active btn-block" title="Editar la forma de una parcela." onclick="" style="background-image:none;"><i class="fa fa-crosshairs fa-lg"></i>   Editar Parcela</a></div><br>-->
+    <!--&lt;!&ndash;           <div id="herramienta_borrar" class="col-md-3 offset-md-1"><a href="#!" class="btn btn-secondary btn-lg active boton_herramientas btn-block" title="Borrar la parcela a la que se clicará." onclick="" style="background-image:none;"><i class="fa fa-globe fa-lg"></i>  Borrar Parcela</a></div><br>&ndash;&gt;-->
+    <!--        </div>-->
+    <!--    </div>-->
+    <!--    <div class="row">-->
     {% block main %}
-    <div id="mapa" class="col-md-8 col-md-offset-4">
-        <div id="map"></div>
-    </div>
+    <!--    <div id="mapa" class="col-md-8 offset-md-2">-->
+<!--    <div id="mapa">-->
+
+<!--    </div>-->
     {% endblock %}
     {% block form %}
-    <div id="panel_parcela" class="col-md-4">
-    <form id="formulario" action="/formulario_parcela/" method="post">
+    <div id="panel_parcela" style="display:none;">
+        <button class="btn btn-danger" title="Borrar Percela" type="button" href="#" onclick='eliminar_parcela();'>
+            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>Eliminar Parcela
+        </button>
+        <form id="formulario" class="col-md-12" action="/formulario_parcela/" method="post">
             {% csrf_token %}
             <div class="row">
-                    <span class="input-group-addon"><b>Nº de parcela</b></span>
-                    {{ form.num_parcela }}
-                    {{ form.num_parcela.errors }}
+                <span class="input-group-addon"><b>Nº de parcela</b></span>
+                {{ form.num_parcela }}
+                {{ form.num_parcela.errors }}
             </div>
             <hr>
             <div class="row">
-                    <span class="input-group-addon"><b>Dia de entrada</b></span>
-                    {{ form.dia_entrada }}
-                    {{ form.dia_entrada.errors }}
+                <span class="input-group-addon"><b>Dia de entrada</b></span>
+                {{ form.dia_entrada }}
+                {{ form.dia_entrada.errors }}
             </div>
             <div class="row">
                 <div class="input-group col-md-6">
@@ -77,15 +114,15 @@
                 </div>
             </div>
             <div class="row">
-                    <span class="input-group-addon"><b>Descomposición boñigas</b></span>
-                    {{ form.descomp_bonigas }}
-                    {{ form.descomp_bonigas.errors }}
+                <span class="input-group-addon"><b>Descomposición boñigas</b></span>
+                {{ form.descomp_bonigas }}
+                {{ form.descomp_bonigas.errors }}
             </div>
             <hr>
             <div class="row">
-                    <span class="input-group-addon"><b>Dia de salida</b></span>
-                    {{ form.dia_salida }}
-                    {{ form.dia_salida.errors }}
+                <span class="input-group-addon"><b>Dia de salida</b></span>
+                {{ form.dia_salida }}
+                {{ form.dia_salida.errors }}
             </div>
             <div class="row">
                 <div class="input-group col-md-6">
@@ -122,14 +159,17 @@
                 <button class="btn btn-success" type="submit" title="Guardar" href="#">
                     <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>Guardar
                 </button>
-                <button class="btn btn-danger" title="Cancelar" href="#" onclick='mostrar_panel_parcela();'>
+                <button class="btn btn-danger" title="Cancelar" type="button" href="#"
+                        onclick='mostrar_panel_parcela();'>
                     <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>Cancelar
                 </button>
             </div>
-    </form>
+        </form>
     </div>
+    <!--    </div>-->
+    <!--    <div class="row">-->
     {% endblock %}
-        </div>
+    <!--        </div>-->
 </main>
 
 <footer class="container">
@@ -170,6 +210,11 @@
 <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
 <script src="{% static 'main/jquery-ui-1.12.1.custom/jquery-ui.min.js' %}"></script>
 <script src="{% static 'main/funciones_leaflet.js' %}"></script>
+<script src="{% static 'main/leaflet-geoman/leaflet-geoman.min.js' %}"></script>
+<!--<link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.css"/>-->
+<!--<script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.min.js"></script>-->
+
+
 <script src="{% static 'main/token.js' %}"></script>
 <!--WICKET (PASAR DE GEOJSON A WKT)-->
 <script src="{% static 'main/Wicket-master/wicket.js' %}"></script>
@@ -180,6 +225,7 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
+
 
 </body>
 </html>
