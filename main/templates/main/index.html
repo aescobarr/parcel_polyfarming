@@ -12,10 +12,12 @@
     {% load bootstrap4 %}
     {# CSS Bootstrap #}
     {% bootstrap_css %}
+    <link href="{% static 'main/animated_chart_array/css/jquery.simple-bar-graph.min.css' %}" rel="stylesheet">
     <link href="{% static 'main/leaflet/leaflet.css' %}" rel="stylesheet">
     <link href="{% static 'main/Leaflet.Draw.static/src/leaflet.draw.css' %}" rel="stylesheet">
     <link href="{% static 'main/leaflet-geoman/leaflet-geoman.css' %}" rel="stylesheet">
-    <script src="{% static 'main/jquery-ui-1.12.1.custom/jquery-ui.min.css' %}"></script>
+    <link href="{% static 'main/jquery-ui-1.12.1.custom/jquery-ui.min.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
     {% block extra_css %}
     <style>
         #cabecera {
@@ -43,10 +45,16 @@
           background-image: url('{% static 'main/leaflet-geoman/customicons/Zoomout.png' %}');
         }
         .ui-dialog { z-index: 1000; background:white}
+
+
+
+
+
+
     </style>
-<!--       body {-->
-<!--            padding-top: 3.5rem;-->
-<!--        }-->
+    <!--       body {-->
+    <!--            padding-top: 3.5rem;-->
+    <!--        }-->
     <!--    #map { height: 800px; }-->
     {% endblock %}
 </head>
@@ -67,104 +75,186 @@
     <!--    <div class="row">-->
     {% block main %}
     <!--    <div id="mapa" class="col-md-8 offset-md-2">-->
-<!--    <div id="mapa">-->
+    <!--    <div id="mapa">-->
 
-<!--    </div>-->
+    <!--    </div>-->
     {% endblock %}
     {% block form %}
-    <div id="panel_parcela" style="display:none;">
-        <button class="btn btn-danger" title="Borrar Percela" type="button" href="#" onclick='eliminar_parcela();'>
-            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>Eliminar Parcela
-        </button>
-        <form id="formulario" class="col-md-12" action="/formulario_parcela/" method="post">
+    <div id="panel_parcela" style="display:none;" class="col-md-10 offset-md-1">
+        <br>
+        <form id="formulario_parcela" class="col-md-12" action="/formulario_parcela/" method="post">
             {% csrf_token %}
             <div class="row">
-                <span class="input-group-addon"><b>Nº de parcela</b></span>
-                {{ form.num_parcela }}
-                {{ form.num_parcela.errors }}
-            </div>
-            <hr>
-            <div class="row">
-                <span class="input-group-addon"><b>Dia de entrada</b></span>
-                {{ form.dia_entrada }}
-                {{ form.dia_entrada.errors }}
-            </div>
-            <div class="row">
-                <div class="input-group col-md-6">
-                    <span class="input-group-addon"><b>Cobertura Gramineas</b></span>
-                    {{ form.cobertura_gramineas }}
-                    {{ form.cobertura_gramineas.errors }}
+                <div class="col-md-4">
+                    <span class="input-group-addon"><b>Nº de parcela</b></span>
+                    {{ formParcela.num_parcela }}
+                    {{ formParcela.num_parcela.errors }}
                 </div>
-                <div class="input-group col-md-6">
-                    <span class="input-group-addon"><b>Cobertura Leguminosa</b></span>
-                    {{ form.cobertura_leguminosa }}
-                    {{ form.cobertura_leguminosa.errors }}
+                <div id="botones_n_parcela" class="row">
+                    <div>
+                        <button id="botones_n_parcela_aceptar" class="btn btn-info" type="submit" title="Aplicar el nº de parcela" href="#">
+                            <i class="bi-check"></i>Aceptar
+                        </button>
+                    </div>
+                    <div>
+                        <button class="btn btn-warning" title="Cancelar" type="button" href="#"
+                                onclick='cancelar_editar_parcela();'>
+                            <i class="bi-x"></i>Cancelar
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="input-group col-md-6">
-                    <span class="input-group-addon"><b>Altura sp. dominante</b></span>
-                    {{ form.altura_sp_dominante }}
-                    {{ form.altura_sp_dominante.errors }}
+                <div class="col-md-3 offset-md-2">
+                    <button class="btn btn-danger" title="Borrar Percela" type="button" href="#"
+                            onclick='eliminar_parcela();'>
+                        <i class="bi-exclamation"></i><i class="bi-trash"></i>Eliminar parcela
+                    </button>
                 </div>
-                <div class="input-group col-md-6">
-                    <span class="input-group-addon"><b>% suelo desnudo en entrada</b></span>
-                    {{ form.porcen_suelo_desnudo }}
-                    {{ form.porcen_suelo_desnudo.errors }}
-                </div>
-            </div>
-            <div class="row">
-                <span class="input-group-addon"><b>Descomposición boñigas</b></span>
-                {{ form.descomp_bonigas }}
-                {{ form.descomp_bonigas.errors }}
-            </div>
-            <hr>
-            <div class="row">
-                <span class="input-group-addon"><b>Dia de salida</b></span>
-                {{ form.dia_salida }}
-                {{ form.dia_salida.errors }}
-            </div>
-            <div class="row">
-                <div class="input-group col-md-6">
-                    <span class="input-group-addon"><b>Altura de pasto no comido</b></span>
-                    {{ form.alt_pasto_no_comido }}
-                    {{ form.alt_pasto_no_comido.errors }}
-                </div>
-                <div class="input-group col-md-6">
-                    <span class="input-group-addon"><b>Nº animales</b></span>
-                    {{ form.num_animales }}
-                    {{ form.num_animales.errors }}
-                </div>
-            </div>
-            <div class="row">
-                <div class="input-group col-md-6">
-                    <span class="input-group-addon"><b>% suelo desnudo en salida</b></span>
-                    {{ form.porcen_suelo_desnudo_salida }}
-                    {{ form.porcen_suelo_desnudo_salida.errors }}
-                </div>
-                <div class="input-group col-md-6">
-                    <span class="input-group-addon"><b>% alimento para vacas</b></span>
-                    {{ form.porcen_alimento_para_vacas }}
-                    {{ form.porcen_alimento_para_vacas.errors }}
-                </div>
-            </div>
-            <div class="row">
-                <div class="input-group col-md-6">
-                    <span class="input-group-addon"><b>Nº balas</b></span>
-                    {{ form.num_balas }}
-                    {{ form.num_balas.errors }}
-                </div>
-            </div>
-            <div class="row">
-                <button class="btn btn-success" type="submit" title="Guardar" href="#">
-                    <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>Guardar
-                </button>
-                <button class="btn btn-danger" title="Cancelar" type="button" href="#"
-                        onclick='mostrar_panel_parcela();'>
-                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>Cancelar
-                </button>
             </div>
         </form>
+        <hr>
+        <div id="panel_lapsos">
+            <h4>Actividad en la parcela <b id="info_header_n_parcela"></b>:</h4>
+            <div id="container_lapsos"></div>
+            <!--            <div class="row">-->
+            <button class="btn" type="button" title="Añadir nueva actividad en esta parcela" href="#"
+                    onclick="btn_nuevo_lapso();">
+                <i class="bi-calendar2-plus" style="font-size: 2rem; color: cornflowerblue;"></i>
+            </button>
+        </div>
+        <div id="panel_info_lapso" style="display:none;">
+            <form id="formulario_lapso" class="col-md-12" action="/formulario_lapso/" method="post">
+                <button class="btn btn-danger float-right" title="Borrar Percela" type="button" href="#" onclick='eliminar_lapso();'>
+                    <i class="bi-exclamation"></i><i class="bi-trash"></i>Eliminar Actividad
+                </button><br>
+                <input type="radio" id="radio_visita" name="tipo" onclick="mostrar_panel_lapso_visita();" checked> Solo
+                visita de parcela:
+                <div id="info_lapso_visita">
+                    <div class="row">
+                        <span class="input-group-addon"><b>Dia de visita</b></span>
+                        {{ formLapso.dia_visita }}
+                        {{ formLapso.dia_visita.errors }}
+                    </div>
+                    <div class="row">
+                        <button class="btn btn-info" type="submit" title="Guardar datos de actividad" href="#">
+                            <i class="bi-check"></i>Aplicar
+                        </button>
+                        <button class="btn btn-warning" title="Cancelar" type="button" href="#"
+                                onclick='cancelar_guardar_actividad();'>
+                            <i class="bi-x"></i>Cancelar
+                        </button>
+                    </div>
+                </div>
+                <br>
+                <input type="radio" id="radio_no_visita" name="tipo" onclick="mostrar_panel_lapso_no_visita();">
+                Entrada/Salida animales:
+                <div id="info_lapso_no_visita" style="display:none;">
+                    <div class="row">
+                        <span class="input-group-addon"><b>Dia de entrada</b></span>
+                        {{ formLapso.dia_entrada }}
+                        {{ formLapso.dia_entrada.errors }}
+                    </div>
+                    <div class="row">
+                        <div class="input-group col-md-6">
+                            <span class="input-group-addon"><b>Cobertura de Gramíneas (%)</b></span>
+                            {{ formLapso.cobertura_gramineas }}
+                            {{ formLapso.cobertura_gramineas.errors }}
+                        </div>
+                        <div class="input-group col-md-6">
+                            <span class="input-group-addon"><b>Altura dominante de las Gramíneas (cm)</b></span>
+                            {{ formLapso.altura_gramineas }}
+                            {{ formLapso.altura_gramineas.errors }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="input-group col-md-6">
+                            <span class="input-group-addon"><b>Cobertura de las Leguminosas (%)</b></span>
+                            {{ formLapso.cobertura_leguminosa }}
+                            {{ formLapso.cobertura_leguminosa.errors }}
+                        </div>
+                        <div class="input-group col-md-6">
+                            <span class="input-group-addon"><b>Altura dominante de las Leguminosas (cm)</b></span>
+                            {{ formLapso.altura_leguminosa }}
+                            {{ formLapso.altura_leguminosa.errors }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="input-group col-md-6">
+                            <span class="input-group-addon"><b>Punto óptimo de reposo</b></span>
+                            {{ formLapso.punto_optimo }}
+                            {{ formLapso.punto_optimo.errors }}
+                        </div>
+                        <div class="input-group col-md-6">
+                            <span class="input-group-addon"><b>Descomposición de las boñigas</b></span>
+                            {{ formLapso.descomp_bonigas }}
+                            {{ formLapso.descomp_bonigas.errors }}
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <span class="input-group-addon"><b>Dia de salida</b></span>
+                        {{ formLapso.dia_salida }}
+                        {{ formLapso.dia_salida.errors }}
+                    </div>
+                    <div class="row">
+                        <div class="input-group col-md-6">
+                            <span class="input-group-addon"><b>Altura del pasto no comido</b></span>
+                            {{ formLapso.alt_pasto_no_comido }}
+                            {{ formLapso.alt_pasto_no_comido.errors }}
+                        </div>
+                        <div class="input-group col-md-6">
+                            <span class="input-group-addon"><b>Nº de animales en la parcela</b></span>
+                            {{ formLapso.num_animales }}
+                            {{ formLapso.num_animales.errors }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="input-group col-md-6">
+                            <span class="input-group-addon"><b>Nº de balas suministradas</b></span>
+                            {{ formLapso.num_balas }}
+                            {{ formLapso.num_balas.errors }}
+                        </div>
+                    </div>
+                    <!--                    <div class="row">-->
+                    <!--                        <button class="btn btn-success" type="submit" title="Guardar" href="#">-->
+                    <!--                            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>Guardar-->
+                    <!--                        </button>-->
+                    <!--                        <button class="btn btn-danger" title="Cancelar" type="button" href="#"-->
+                    <!--                                onclick='mostrar_panel_parcela();'>-->
+                    <!--                            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>Cancelar-->
+                    <!--                        </button>-->
+                    <!--                    </div>-->
+                    <div class="row">
+                        <button class="btn btn-info" type="submit" title="Guardar datos de actividad" href="#">
+                            <i class="bi-check"></i>Guardar actividad
+                        </button>
+                        <button class="btn btn-warning" title="Cancelar" type="button" href="#"
+                                onclick='cancelar_guardar_actividad();'>
+                            <i class="bi-x"></i>Cancelar
+                        </button>
+                        <button class="btn btn-danger" title="Borrar Percela" type="button" href="#" onclick='eliminar_lapso();'>
+                            <i class="bi-exclamation"></i><i class="bi-trash"></i>Eliminar actividad
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <hr>
+        <div id="panel_graficos">
+            <div id="grafico_coberturas"></div>
+            <div id="grafico_alturas"></div>
+            <div id="grafico_altura_pasto_no_comido"></div>
+            <div id="grafico_num_animales"></div>
+            <div id="grafico_num_balas"></div>
+            <br>
+<!--class="lineChart chart"-->
+<!--            <ul class="nav nav-tabs">-->
+<!--                <li role="presentation" class="active"><a href="#">Cobertura Gramíneas</a></li>-->
+<!--                <li role="presentation"><a href="#">Altura Gramíneas</a></li>-->
+<!--            </ul>-->
+<!--            <div id="grafico_cobertura_gramineas"></div>-->
+<!--            <div id="grafico_altura_gramineas"></div>-->
+        </div>
     </div>
     <!--    </div>-->
     <!--    <div class="row">-->
@@ -209,6 +299,10 @@
 <!--<script src="{% static 'main/js-cookie-master/src/js.cookie.js' %}"></script>-->
 <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
 <script src="{% static 'main/jquery-ui-1.12.1.custom/jquery-ui.min.js' %}"></script>
+<script src="{% static 'main/chartinator.js' %}"></script>
+<!--<script src="{% static 'main/animated_chart_array/js/jquery.simple-bar-graph.min.js' %}"></script>-->
+<!--<script src="{% static 'main/jquery.canvasjs.min.js' %}"></script>-->
+<script src="{% static 'main/datepicker_esp.js' %}"></script>
 <script src="{% static 'main/funciones_leaflet.js' %}"></script>
 <script src="{% static 'main/leaflet-geoman/leaflet-geoman.min.js' %}"></script>
 <!--<link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.css"/>-->

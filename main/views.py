@@ -1,3 +1,5 @@
+import operator
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import logout
 from django.contrib.auth import authenticate
@@ -17,7 +19,7 @@ from copy import copy
 @login_required(login_url='/login')
 def index(request):
     #if request.user.is_authenticated:
-    return render(request, "main/index.html",{'form':ParcelasForm})#,'parcelas':json_parcelas})
+    return render(request, "main/index.html",{'formParcela':ParcelaForm,'formLapso':LapsoForm})#,'parcelas':json_parcelas})
 
 
     #return redirect('/login')
@@ -47,6 +49,7 @@ def login(request):
     # Si llegamos al final renderizamos el formulario
     return render(request, "main/login.html", {'form': form})
 
+###-------------------------------------FUNIONES PARCELAS---------------------------------
 def guardar_nueva_parcela(request):
     usuario = request.user
     geom = request.POST["geom_wkt"]
@@ -64,7 +67,7 @@ def guardar_nueva_parcela(request):
             #chosen_num = min_value
             num_parcela = min_value#chosen_num
         #
-        form = ParcelasForm(data={'usuario':usuario,'num_parcela':num_parcela,'geom':geom})  # request.POST
+        form = ParcelaForm(data={'usuario':usuario,'num_parcela':num_parcela,'geom':geom})  # request.POST
         if form.is_valid():
             form.save()
             # return HttpResponseRedirect(reverse('main:index'))
@@ -75,23 +78,20 @@ def guardar_nueva_parcela(request):
         response.status_code = 400
         return response
 
-def guardar_editar_parcela(request):
+def editar_n_parcela(request):
     #geom = request.POST["geom_wkt"]
     try:
         if request.method == 'POST':
             usuario = request.user
-            try:#mirar si existe la parcela antes de editarla
-                id = Parcelas.objects.get(usuario=usuario, num_parcela=request.POST["num_parcela"]).id
-                instancia = get_object_or_404(Parcelas, id=id)
+            try:#mirar si ya existe el n de parcela que ha introducido el usuario
+                if (Parcelas.objects.filter(usuario=request.user, num_parcela=request.POST["num_parcela"]).exists() == False):
+                    id = Parcelas.objects.get(usuario=usuario, num_parcela=request.POST["num_parcela_original"]).id
+                    instancia = get_object_or_404(Parcelas, id=id)
             except:
-                response = JsonResponse({"error": "Error: Editando una parcela que no existe."})
+                response = JsonResponse({"Error": "El nº de parcela introducido ya existe."})
                 response.status_code = 400
                 return response
-            #
-            # ##Si tambien se ha modificado el poligono aparte de los datos:
-            # if request.POST["geom"] != "" and request.POST["geom"] != "undefined" and request.POST["geom"] is not None:
-            #     instancia.geom = request.POST["geom"]
-            # #
+
             #Como no pasamos los obligatorios como la geometria,usuario,etc en el Post,los añadimos manualmente
             post = copy(request.POST)
             post["usuario"] = instancia.usuario
@@ -99,8 +99,8 @@ def guardar_editar_parcela(request):
             post["ultima_modificacion"] = datetime.datetime.now()
             #post[""] = instancia.
             #Y ahora si que podemos pasar los datos juntos
-            form = ParcelasForm(post, instance=instancia)#modificar un form
-            # form = ParcelasForm(instance=instancia)#cargar un form
+            form = ParcelaForm(post, instance=instancia)#modificar un form
+            # form = ParcelaForm(instance=instancia)#cargar un form
             if form.is_valid():
                 form.save()
                 return HttpResponse("{}", content_type='application/json;')
@@ -133,8 +133,8 @@ def editar_geom_parcela(request):
             post["ultima_modificacion"] = datetime.datetime.now()
             #post[""] = instancia.
             #Y ahora si que podemos pasar los datos juntos
-            form = ParcelasForm(post, instance=instancia)#modificar un form
-            # form = ParcelasForm(instance=instancia)#cargar un form
+            form = ParcelaForm(post, instance=instancia)#modificar un form
+            # form = ParcelaForm(instance=instancia)#cargar un form
             if form.is_valid():
                 form.save()
                 return HttpResponse("{}", content_type='application/json;')
@@ -168,35 +168,44 @@ def GetParcelas(request):
     for p in parcelas:
         resultado.append({'num_parcela': p.num_parcela, 'geom':p.geom})
 
-    # form = ParcelasForm(instance=instancia)#cargar un form
+    # form = ParcelaForm(instance=instancia)#cargar un form
     resultado = json.dumps(resultado)
     return HttpResponse(resultado, content_type='application/json;')
-
-    #parcelas = Parcelas.objects.filter(usuario=request.user).order_by('num_parcela')#.values("geom")
-    #resultado = []
-    #for p in parcelas:
-    # json1 = serializers.serialize('json', parcelas.clean_fields() )
-    # json_parcelas = json.dumps(json1)
-    # return render(request, "main/index.html",{'form':ParcelasForm,'parcelas':json_parcelas})
 
 def GetInfoParcela(request):
     try:
         if request.method == 'POST':
             parcela = Parcelas.objects.get(usuario=request.user, num_parcela=request.POST["num_parcela"])
-            #resultado = []
-            #Cambiar el formato de la base de datos al que usamos en los formularios
             try:
-                entrada = parcela.dia_entrada.strftime('%d-%m-%Y')
+                lapsos = Lapsos.objects.filter(parcela=parcela).values('id','dia_visita','dia_entrada','dia_salida','cobertura_gramineas','altura_gramineas','cobertura_leguminosa','altura_leguminosa','punto_optimo','descomp_bonigas','alt_pasto_no_comido','num_animales','num_balas')#.order_by('dia_visita','dia_entrada')
+                # lapsos_visita = Lapsos.objects.filter(parcela=parcela).values('id','dia_visita','dia_entrada','dia_salida','cobertura_gramineas','altura_gramineas','cobertura_leguminosa','altura_leguminosa','punto_optimo','descomp_bonigas','alt_pasto_no_comido','num_animales','num_balas').order_by('dia_visita')
+                # lapsos_actividad = Lapsos.objects.filter(parcela=parcela).values('id','dia_visita','dia_entrada','dia_salida','cobertura_gramineas','altura_gramineas','cobertura_leguminosa','altura_leguminosa','punto_optimo','descomp_bonigas','alt_pasto_no_comido','num_animales','num_balas').order_by('dia_entrada')
             except:
-                entrada = ""
-            try:
-                salida = parcela.dia_salida.strftime('%d-%m-%Y')
-            except:
-                salida = ""
-            # entrada = datetime.strptime(parcela.dia_entrada, '%Y-%m-%d')
-            # entrada.strftime('%d-%m-%Y')
-            #
-            resultado ={'num_parcela': parcela.num_parcela, 'dia_entrada': entrada, 'dia_salida':salida}
+                lapsos = []
+
+            list_lapsos = []
+            dia_visita=""
+            dia_entrada=""
+            dia_salida=""
+            for lapso in lapsos:
+                dia_visita = ""
+                dia_entrada = ""
+                dia_salida = ""
+                dia_orden = ""
+                if(lapso["dia_visita"] is not None):
+                    dia_visita = lapso["dia_visita"].strftime('%d-%m-%Y')
+                    dia_orden = datetime.datetime.strptime(lapso["dia_visita"].strftime('%Y-%m-%d'),'%Y-%m-%d')#dia_visita#datetime.datetime.strptime(dia_visita,'%d-%m-%Y')
+                if (lapso["dia_entrada"] is not None):
+                    dia_entrada = lapso["dia_entrada"].strftime('%d-%m-%Y')
+                    dia_orden = datetime.datetime.strptime(lapso["dia_entrada"].strftime('%Y-%m-%d'),'%Y-%m-%d')
+                if (lapso["dia_salida"] is not None):
+                    dia_salida = lapso["dia_salida"].strftime('%d-%m-%Y')
+                list_lapsos.append({'id':lapso["id"],'dia_orden':dia_orden , 'dia_visita': dia_visita, 'dia_entrada':dia_entrada, 'dia_salida':dia_salida, 'cobertura_gramineas':lapso["cobertura_gramineas"], 'altura_gramineas':lapso["altura_gramineas"], 'cobertura_leguminosa':lapso["cobertura_leguminosa"], 'altura_leguminosa':lapso["altura_leguminosa"], 'punto_optimo':lapso["punto_optimo"], 'descomp_bonigas':lapso["descomp_bonigas"], 'alt_pasto_no_comido':lapso["alt_pasto_no_comido"], 'num_animales':lapso["num_animales"], 'num_balas':lapso["num_balas"]})
+            #list_lapsos.sort(key=operator.itemgetter('dia_orden'))#ordenamos la lista por las fechas
+            list_lapsos = sorted(list_lapsos, key=lambda x: x.get('dia_orden'))
+            for lapso in list_lapsos:# Ahora podemos eliminar el campo dia_orden ya que no hace falta en el json
+                del lapso['dia_orden']
+            resultado ={'num_parcela': parcela.num_parcela, 'lapsos': list_lapsos}
             resultado = json.dumps(resultado)
             return HttpResponse(resultado, content_type='application/json;')
         #si llega hasta aquí es que si existe ya dicha parcela
@@ -204,11 +213,101 @@ def GetInfoParcela(request):
         response.status_code = 400
         return response
     except:
-        response = JsonResponse({"Error": "Hay 2 o más parcelas con el mismo numero."})
+        response = JsonResponse({"Error": "."})
         response.status_code = 400
         return response
 
-def logout(request):
+
+###-------------------------------------FUNIONES LAPSOS---------------------------------
+def guardar_editar_lapso(request):
+    usuario = request.user
+    num_parcela = request.POST["num_parcela"]
+    try:
+        #parcela = Parcelas.objects.get(usuario=request.user, num_parcela=num_parcela)
+        parcela = get_object_or_404(Parcelas, usuario=request.user, num_parcela=num_parcela)
+        post = copy(request.POST)
+        if(request.POST["dia_visita"]!=""):#---SI ES UNA VISITA, PASAR SOLO EL DIA
+            post["dia_entrada"] = None
+            post["cobertura_gramineas"] = None
+            post["altura_gramineas"] = None
+            post["cobertura_leguminosa"] = None
+            post["altura_leguminosa"] = None
+            post["punto_optimo"] = None
+            post["descomp_bonigas"] = None
+            post["dia_salida"] = None
+            post["alt_pasto_no_comido"] = None
+            post["num_animales"] = None
+            post["num_balas"] = None
+
+
+        post["parcela"] = parcela
+        if(request.POST["editando_lapso"]!=""):
+            instancia = get_object_or_404(Lapsos.objects.filter(parcela=parcela), id=request.POST["editando_lapso"])
+            form = LapsoForm(post, instance=instancia)  # modificar un form
+        else:
+            form = LapsoForm(post)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({"num_parcela": num_parcela})
+    except:
+        response = JsonResponse({"error": "Error al crear la parcela."})
+        response.status_code = 400
+        return response
+
+def eliminar_lapso(request):
+    try:
+        if request.method == 'POST':
+            usuario = request.user
+            try:
+                # esto simplemente para asegurar la identidad del que eliminar el lapso
+                parcela = Parcelas.objects.get(usuario=usuario, num_parcela=request.POST["num_parcela"]).id
+                instancia = get_object_or_404(Lapsos, id=request.POST["id_lapso"], parcela=parcela)
+                instancia.delete()
+                return HttpResponse("{}", content_type='application/json;')
+            except:
+                response = JsonResponse({"error": "Error: Intentando eliminar una actividad no detectada."})
+                response.status_code = 400
+                return response
+    except:
+        response = JsonResponse({"error": "Error al borrar la actividad."})
+        response.status_code = 400
+        return response
+
+def GetInfoLapso(request):
+    try:
+        if request.method == 'POST':
+            parcela = Parcelas.objects.get(usuario=request.user, num_parcela=request.POST["num_parcela"])
+            try:
+                lapso = Lapsos.objects.get(id=request.POST["id"], parcela=parcela)#.values('id','dia_visita','dia_entrada','dia_salida')
+            except:
+                lapso = []
+
+            dia_visita=""
+            dia_entrada=""
+            dia_salida=""
+            if(lapso.dia_visita is not None):
+                dia_visita = lapso.dia_visita.strftime('%d-%m-%Y')
+            if (lapso.dia_entrada is not None):
+                dia_entrada = lapso.dia_entrada.strftime('%d-%m-%Y')
+            if (lapso.dia_salida is not None):
+                dia_salida = lapso.dia_salida.strftime('%d-%m-%Y')
+            resultado = {'dia_visita': dia_visita, 'dia_entrada':dia_entrada, 'cobertura_gramineas': lapso.cobertura_gramineas , 'altura_gramineas':lapso.altura_gramineas, 'cobertura_leguminosa':lapso.cobertura_leguminosa, 'altura_leguminosa':lapso.altura_leguminosa, 'punto_optimo':lapso.punto_optimo, 'descomp_bonigas':lapso.descomp_bonigas,'dia_salida':dia_salida, 'alt_pasto_no_comido':lapso.alt_pasto_no_comido, 'num_animales':lapso.num_animales, 'num_balas':lapso.num_balas}
+            #resultado ={'num_parcela': parcela.num_parcela, 'lapsos': list_lapsos}
+            resultado = json.dumps(resultado)
+            return HttpResponse(resultado, content_type='application/json;')
+        #si llega hasta aquí es que si existe ya dicha parcela
+        response = JsonResponse({"Error": "Error al enviar los datos."})
+        response.status_code = 400
+        return response
+    except:
+        response = JsonResponse({"Error": "."})
+        response.status_code = 400
+        return response
+
+
+###----------------------------------------------------------------------
+
+def signout(request):
     logout(request)
     return redirect('/')
 
@@ -235,12 +334,12 @@ def check_n_parcela(request): #al modificar un num_parcela, comprueba dinámicam
 #     nuevo="1"
 #     admin=False
 #     if request.method == 'POST':
-#         form = ParcelasForm(request.POST)
+#         form = ParcelaForm(request.POST)
         # if request.user.groups.filter(name="Admins"):
         #     admin=True
         # try:
         #     id_form=request.POST["id_form"]
-        #     instance = get_object_or_404(ParcelasForm, id=id_form)
+        #     instance = get_object_or_404(ParcelaForm, id=id_form)
         #     # form = CitacionsEspeciesForm(instance=instance)
         # except:
         #     instance = None
@@ -249,7 +348,7 @@ def check_n_parcela(request): #al modificar un num_parcela, comprueba dinámicam
         #
         # # QUE TIPO DE FORMULARIO ES:
         # if instance is None:# Si se guarda por primera vez el form
-        #     form = ParcelasForm(request.POST)
+        #     form = ParcelaForm(request.POST)
         # else:
         #     if "cargar_form" in request.POST: # Si solo se carga el form
         #         form = CitacionsEspeciesForm(instance=instance)

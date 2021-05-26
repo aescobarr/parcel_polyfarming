@@ -1,14 +1,19 @@
 <nav id="cabecera" class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
-            aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
 
-    <div class="btn-group">
-        <i class="fa fa-user-circle"></i>
-        <a class="navbar-brand btn-lg">{{ user.username }}</a>
-        <ul class="dropdown-menu">
-            <li><a href="/logout" class="dropdown-item" role="button">Cerrar Sesión</a></li>
-        </ul>
+    <div class="dropdown show">
+      <a class="btn btn-secondary dropdown-toggle navbar-brand btn-lg" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        {{ user.username }}
+      </a>
+
+      <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+        <a class="dropdown-item" href="/signout">Cerrar Sesión</a>
+      </div>
     </div>
+<!--    <div class="btn-group">-->
+<!--        <i class="fa fa-user-circle"></i>-->
+<!--        <a class="navbar-brand btn-lg">{{ user.username }}</a>-->
+<!--        <ul class="dropdown-menu">-->
+<!--            <li><a href="/logout" class="dropdown-item" role="button">Cerrar Sesión</a></li>-->
+<!--        </ul>-->
+<!--    </div>-->
 </nav>
