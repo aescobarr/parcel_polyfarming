@@ -14,6 +14,9 @@ from django.http import *
 import datetime
 import json
 from copy import copy
+from openpyxl import  Workbook, load_workbook
+from openpyxl.writer.excel import save_virtual_workbook #util para el httpresponse
+import unicodecsv as csv
 
 
 @login_required(login_url='/login')
@@ -226,14 +229,14 @@ def guardar_editar_lapso(request):
         #parcela = Parcelas.objects.get(usuario=request.user, num_parcela=num_parcela)
         parcela = get_object_or_404(Parcelas, usuario=request.user, num_parcela=num_parcela)
         post = copy(request.POST)
-        if(request.POST["dia_visita"]!=""):#---SI ES UNA VISITA, PASAR SOLO EL DIA
+        if(request.POST["dia_visita"]!=""):#---SI ES UNA VISITA, NO PASAR DIA ENTRADA NI NADA DESPUÉS DEL DIA SALIDA
             post["dia_entrada"] = None
-            post["cobertura_gramineas"] = None
-            post["altura_gramineas"] = None
-            post["cobertura_leguminosa"] = None
-            post["altura_leguminosa"] = None
-            post["punto_optimo"] = None
-            post["descomp_bonigas"] = None
+            # post["cobertura_gramineas"] = None
+            # post["altura_gramineas"] = None
+            # post["cobertura_leguminosa"] = None
+            # post["altura_leguminosa"] = None
+            # post["punto_optimo"] = None
+            # post["descomp_bonigas"] = None
             post["dia_salida"] = None
             post["alt_pasto_no_comido"] = None
             post["num_animales"] = None
@@ -325,6 +328,47 @@ def check_n_parcela(request): #al modificar un num_parcela, comprueba dinámicam
         response.status_code = 400
         return response
 
+def generar_informe(request):
+        resultado = []
+        parcela = Parcelas.objects.get(usuario=request.user, num_parcela=request.POST["num_parcela"])
+        try:
+            lapsos = Lapsos.objects.filter(parcela=parcela).values('id','dia_visita','dia_entrada','dia_salida','cobertura_gramineas','altura_gramineas','cobertura_leguminosa','altura_leguminosa','punto_optimo','descomp_bonigas','alt_pasto_no_comido','num_animales','num_balas')
+        except:
+            lapsos = []
+
+        list_lapsos = []
+        dia_visita=""
+        dia_entrada=""
+        dia_salida=""
+        for lapso in lapsos:
+            dia_visita = ""
+            dia_entrada = ""
+            dia_salida = ""
+            dia_orden = ""
+            if(lapso["dia_visita"] is not None):
+                dia_visita = lapso["dia_visita"].strftime('%d-%m-%Y')
+                dia_orden = datetime.datetime.strptime(lapso["dia_visita"].strftime('%Y-%m-%d'),'%Y-%m-%d')#dia_visita#datetime.datetime.strptime(dia_visita,'%d-%m-%Y')
+            if (lapso["dia_entrada"] is not None):
+                dia_entrada = lapso["dia_entrada"].strftime('%d-%m-%Y')
+                dia_orden = datetime.datetime.strptime(lapso["dia_entrada"].strftime('%Y-%m-%d'),'%Y-%m-%d')
+            if (lapso["dia_salida"] is not None):
+                dia_salida = lapso["dia_salida"].strftime('%d-%m-%Y')
+            list_lapsos.append({'id':lapso["id"],'dia_orden':dia_orden , 'dia_visita': dia_visita, 'dia_entrada':dia_entrada, 'dia_salida':dia_salida, 'cobertura_gramineas':lapso["cobertura_gramineas"], 'altura_gramineas':lapso["altura_gramineas"], 'cobertura_leguminosa':lapso["cobertura_leguminosa"], 'altura_leguminosa':lapso["altura_leguminosa"], 'punto_optimo':lapso["punto_optimo"], 'descomp_bonigas':lapso["descomp_bonigas"], 'alt_pasto_no_comido':lapso["alt_pasto_no_comido"], 'num_animales':lapso["num_animales"], 'num_balas':lapso["num_balas"]})
+        #list_lapsos.sort(key=operator.itemgetter('dia_orden'))#ordenamos la lista por las fechas
+        list_lapsos = sorted(list_lapsos, key=lambda x: x.get('dia_orden'))
+        for lapso in list_lapsos:# Ahora podemos eliminar el campo dia_orden ya que no hace falta en el json
+            del lapso['dia_orden']
+
+        workbook = Workbook()
+        worksheet = workbook.active
+        # worksheet.append([u'Actividad en Parcela '+request.POST["num_parcela"]])
+        worksheet.append([u'Parcela',u'Dia visita/entrada', u'Cobertura de Gramíneas (%)', u'Altura dominante de las Gramíneas (cm)', u'Cobertura de las Leguminosas (%)', u'Altura dominante de las Leguminosas (cm)', u'Punto óptimo de reposo', u'Descomposición de las boñigas',u'Dia salida', u'Altura del pasto no comido', u'Número de animales en parcela', u'Número de balas suministradas'])
+        #Rellenarlo de datos
+        for lapso in list_lapsos:
+            worksheet.append([request.POST["num_parcela"], lapso['dia_visita']+lapso['dia_entrada'],lapso['cobertura_gramineas'], lapso['altura_gramineas'], lapso['cobertura_leguminosa'], lapso['altura_leguminosa'], lapso['punto_optimo'], lapso['descomp_bonigas'],  lapso['dia_salida'], lapso['alt_pasto_no_comido'], lapso['num_animales'], lapso['num_balas']])
+        response = HttpResponse(content=save_virtual_workbook(workbook), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=InformeActividad_parcela'+str(request.POST["num_parcela"])+'.xlsx'
+        return response
 
 
 # @login_required(login_url='/login/')

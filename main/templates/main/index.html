@@ -80,79 +80,103 @@
     <!--    </div>-->
     {% endblock %}
     {% block form %}
+<!--    border-radius:5px;border:2px solid grey;-->
+    <div class="border">
     <div id="panel_parcela" style="display:none;" class="col-md-10 offset-md-1">
         <br>
-        <form id="formulario_parcela" class="col-md-12" action="/formulario_parcela/" method="post">
-            {% csrf_token %}
+<!--        <form id="formulario_parcela" class="col-md-12" action="/formulario_parcela/" method="post">-->
+<!--            {% csrf_token %}-->
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-4" align="left">
+                    <a onclick='ocultar_panel_parcela();mostrar_panel_mapa();' title="Volver al mapa"  class='btn btn-lg bg-info' href='#'><i class="bi-arrow-return-left"></i> <i class="bi-map"></i>  Volver al mapa</a>
+                </div>
+                <div class="col-md-4" align="center">
+                    <a onclick='btn_editar_n_parcela();' title="Cambiar el número de la parcela"  class='btn btn-lg bg-info' href='#'><i class="bi-pencil-square"></i>  Cambiar el nº de la parcela</a>
+                </div>
+                <div class="col-md-4" align="right">
+                    <a onclick='eliminar_parcela();' title="Borrar Percela"  class='btn btn-danger btn-lg' href='#'><i class="bi-exclamation"></i><i class="bi-trash"></i>  Eliminar parcela</a>
+                </div>
+            </div>
+            <br><br>
+            <h2 align="center">Parcela nº <b id="info_header_n_parcela"></b></h2>
+<!--            <div class="row">-->
+                <div class="disabled" hidden>
                     <span class="input-group-addon"><b>Nº de parcela</b></span>
                     {{ formParcela.num_parcela }}
                     {{ formParcela.num_parcela.errors }}
                 </div>
-                <div id="botones_n_parcela" class="row">
-                    <div>
-                        <button id="botones_n_parcela_aceptar" class="btn btn-info" type="submit" title="Aplicar el nº de parcela" href="#">
-                            <i class="bi-check"></i>Aceptar
-                        </button>
-                    </div>
-                    <div>
-                        <button class="btn btn-warning" title="Cancelar" type="button" href="#"
-                                onclick='cancelar_editar_parcela();'>
-                            <i class="bi-x"></i>Cancelar
-                        </button>
-                    </div>
-                </div>
-                <div class="col-md-3 offset-md-2">
-                    <button class="btn btn-danger" title="Borrar Percela" type="button" href="#"
-                            onclick='eliminar_parcela();'>
-                        <i class="bi-exclamation"></i><i class="bi-trash"></i>Eliminar parcela
-                    </button>
-                </div>
-            </div>
-        </form>
+<!--                <div id="botones_n_parcela" class="row">-->
+<!--                    <div>-->
+<!--                        <button id="botones_n_parcela_aceptar" class="btn btn-info" type="submit" title="Aplicar el nº de parcela" href="#">-->
+<!--                            <i class="bi-check"></i>Aceptar-->
+<!--                        </button>-->
+<!--                    </div>-->
+<!--                    <div>-->
+<!--                        <button class="btn btn-warning" title="Cancelar" type="button" href="#"-->
+<!--                                onclick='cancelar_editar_parcela();'>-->
+<!--                            <i class="bi-x"></i>Cancelar-->
+<!--                        </button>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--&lt;!&ndash;                <div class="col-md-3 offset-md-2">&ndash;&gt;-->
+<!--&lt;!&ndash;                </div>&ndash;&gt;-->
+<!--            </div>-->
+<!--        </form>-->
         <hr>
         <div id="panel_lapsos">
-            <h4>Actividad en la parcela <b id="info_header_n_parcela"></b>:</h4>
+            <h4>Actividad en la parcela:</h4>
             <div id="container_lapsos"></div>
             <!--            <div class="row">-->
-            <button class="btn" type="button" title="Añadir nueva actividad en esta parcela" href="#"
-                    onclick="btn_nuevo_lapso();">
-                <i class="bi-calendar2-plus" style="font-size: 2rem; color: cornflowerblue;"></i>
-            </button>
+                <br>
+                <div class="d-flex justify-content-between">
+                    <div class="p-2 border">
+                        <button class="btn" type="button" title="Añadir nueva actividad en esta parcela" href="#"
+                                onclick="btn_nuevo_lapso();">
+                            <i class="bi-calendar2-plus" style="font-size: 2rem; color: cornflowerblue;"></i> Añadir nueva actividad
+                        </button>
+                    </div>
+                    <div class="p-2 border">
+                        <form id="form_generar_informe" method="post" action="/generar_informe_actividad" hidden>
+                            {% csrf_token %}
+                            <input id="informe_num_parcela" name="num_parcela" value="" hidden/>
+                        </form>
+                        <button class="btn" id="informe_btn_generar" title="Generar informe en formato xlsx" href="#">
+                            <i class="bi-file-earmark-spreadsheet-fill" style="font-size: 2rem; color: lightgreen;"></i> Generar Informe (Excel)
+                        </button>
+                    </div>
+                </div>
+
         </div>
         <div id="panel_info_lapso" style="display:none;">
+<!--style="display:none;">-->
             <form id="formulario_lapso" class="col-md-12" action="/formulario_lapso/" method="post">
-                <button class="btn btn-danger float-right" title="Borrar Percela" type="button" href="#" onclick='eliminar_lapso();'>
-                    <i class="bi-exclamation"></i><i class="bi-trash"></i>Eliminar Actividad
-                </button><br>
-                <input type="radio" id="radio_visita" name="tipo" onclick="mostrar_panel_lapso_visita();" checked> Solo
-                visita de parcela:
-                <div id="info_lapso_visita">
-                    <div class="row">
+                <div  class="d-flex flex-row-reverse">
+                        <button id="btn_eliminar_actividad" class="btn btn-danger float-right" title="Borrar Percela" type="button" href="#" onclick='eliminar_lapso();'>
+                            <i class="bi-exclamation"></i><i class="bi-trash"></i>Eliminar Actividad
+                        </button>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <div class="p-5">
+                        <input type="radio" id="radio_visita" name="tipo" onclick="mostrar_info_visita();" checked> Visita de parcela
+                    </div>
+                    <div class="p-5">
+                        <input type="radio" id="radio_no_visita" name="tipo" onclick="mostrar_info_no_visita();"> Entrada/Salida animales
+                    </div>
+                </div>
+<!--                <div id="info_lapso_visita">-->
+                    <div class="row lapso_datos_visita">
                         <span class="input-group-addon"><b>Dia de visita</b></span>
                         {{ formLapso.dia_visita }}
                         {{ formLapso.dia_visita.errors }}
                     </div>
-                    <div class="row">
-                        <button class="btn btn-info" type="submit" title="Guardar datos de actividad" href="#">
-                            <i class="bi-check"></i>Aplicar
-                        </button>
-                        <button class="btn btn-warning" title="Cancelar" type="button" href="#"
-                                onclick='cancelar_guardar_actividad();'>
-                            <i class="bi-x"></i>Cancelar
-                        </button>
-                    </div>
-                </div>
-                <br>
-                <input type="radio" id="radio_no_visita" name="tipo" onclick="mostrar_panel_lapso_no_visita();">
-                Entrada/Salida animales:
-                <div id="info_lapso_no_visita" style="display:none;">
-                    <div class="row">
+<!--                </div>-->
+<!--                <div id="info_lapso_no_visita" style="display:none;">-->
+                    <div class="row lapso_datos_entrada_salida">
                         <span class="input-group-addon"><b>Dia de entrada</b></span>
                         {{ formLapso.dia_entrada }}
                         {{ formLapso.dia_entrada.errors }}
                     </div>
+                    <br>
                     <div class="row">
                         <div class="input-group col-md-6">
                             <span class="input-group-addon"><b>Cobertura de Gramíneas (%)</b></span>
@@ -189,7 +213,7 @@
                             {{ formLapso.descomp_bonigas.errors }}
                         </div>
                     </div>
-                    <hr>
+                <div class="lapso_datos_entrada_salida">
                     <div class="row">
                         <span class="input-group-addon"><b>Dia de salida</b></span>
                         {{ formLapso.dia_salida }}
@@ -214,6 +238,7 @@
                             {{ formLapso.num_balas.errors }}
                         </div>
                     </div>
+                    </div>
                     <!--                    <div class="row">-->
                     <!--                        <button class="btn btn-success" type="submit" title="Guardar" href="#">-->
                     <!--                            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>Guardar-->
@@ -223,6 +248,7 @@
                     <!--                            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>Cancelar-->
                     <!--                        </button>-->
                     <!--                    </div>-->
+                    <hr>
                     <div class="row">
                         <button class="btn btn-info" type="submit" title="Guardar datos de actividad" href="#">
                             <i class="bi-check"></i>Guardar actividad
@@ -231,11 +257,11 @@
                                 onclick='cancelar_guardar_actividad();'>
                             <i class="bi-x"></i>Cancelar
                         </button>
-                        <button class="btn btn-danger" title="Borrar Percela" type="button" href="#" onclick='eliminar_lapso();'>
-                            <i class="bi-exclamation"></i><i class="bi-trash"></i>Eliminar actividad
-                        </button>
+<!--                        <button class="btn btn-danger" title="Borrar Percela" type="button" href="#" onclick='eliminar_lapso();'>-->
+<!--                            <i class="bi-exclamation"></i><i class="bi-trash"></i>Eliminar actividad-->
+<!--                        </button>-->
                     </div>
-                </div>
+<!--                </div>-->
             </form>
         </div>
 
@@ -255,6 +281,7 @@
 <!--            <div id="grafico_cobertura_gramineas"></div>-->
 <!--            <div id="grafico_altura_gramineas"></div>-->
         </div>
+    </div>
     </div>
     <!--    </div>-->
     <!--    <div class="row">-->

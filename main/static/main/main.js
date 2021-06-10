@@ -84,7 +84,7 @@ function getinfoparcela(num_parcela){
                 success: function(data) {
 //                    mostrar_panel_parcela();
                     editando_parcela = data["num_parcela"];
-                    $("#botones_n_parcela_aceptar").prop('disabled',true);
+//                    $("#botones_n_parcela_aceptar").prop('disabled',true);
                     $("#id_num_parcela").val(data["num_parcela"]);
                     $("#info_header_n_parcela").html(data["num_parcela"]);
                     //Lapsos/actividad
@@ -115,6 +115,8 @@ function getinfoparcela(num_parcela){
                             }else
                             {
                                 $("#container_lapsos").append('<button type="button" class="btn btn-outline-info col-md-3" onclick="clk_lapso('+lapso["id"]+');"><i class="bi-calendar2" style="font-size: 2rem;"></i><br>Visita<br> el '+lapso["dia_visita"]+'</button>');
+                                array_coberturas.push([lapso["dia_visita"],lapso["cobertura_gramineas"],lapso["cobertura_gramineas"]+"%",lapso["cobertura_leguminosa"],lapso["cobertura_leguminosa"]+"%"]);
+                                array_alturas.push([lapso["dia_visita"],lapso["altura_gramineas"],lapso["altura_gramineas"]+"cm",lapso["altura_leguminosa"],lapso["altura_leguminosa"]+"cm"]);
                             }
                         });
                         $('#grafico_coberturas').chartinator({
@@ -352,6 +354,7 @@ function eliminar_parcela(){
     $.confirm({
                 title: 'Eliminar parcela',
                 content: 'Seguro que deseas borrar la parcela '+$("#id_num_parcela").val()+' y sus datos?',
+                type: 'red',
                 buttons: {
                     confirm: {
                         text: 'Si',
@@ -390,6 +393,7 @@ function eliminar_lapso(){
     $.confirm({
                 title: 'Eliminar actividad',
                 content: 'Seguro que deseas borrar esta actividad y sus datos?',
+                type: 'red',
                 buttons: {
                     confirm: {
                         text: 'Si',
@@ -405,6 +409,8 @@ function eliminar_lapso(){
                                     alert("Actividad eliminada con éxito.");
                                     //location.reload();
                                     getinfoparcela($("#id_num_parcela").val());
+                                    ocultar_panel_info_lapso();
+                                    mostrar_panel_lapsos();
 //                                    mostrar_panel_parcela();
                                 },
                                 error: function (data){
@@ -435,8 +441,10 @@ function clk_lapso(id){
 //            mostrar_panel_info_lapso();
             ocultar_panel_lapsos();
             mostrar_panel_info_lapso();
+            $("#btn_eliminar_actividad").show();
             if(data["dia_visita"]==""){
-                $("#radio_no_visita").prop("checked", true).trigger("click");
+                $("#radio_no_visita").prop("checked", true);
+                mostrar_info_no_visita();
                 $("#id_dia_visita").val("");
                 $("#id_dia_entrada").val(data["dia_entrada"]);
                 $("#id_cobertura_gramineas").val(data["cobertura_gramineas"]);
@@ -450,8 +458,15 @@ function clk_lapso(id){
                 $("#id_num_animales").val(data["num_animales"]);
                 $("#id_num_balas").val(data["num_balas"]);
             }else{
-                $("#radio_visita").prop("checked", true).trigger("click");
+                $("#radio_visita").prop("checked", true);
+                mostrar_info_visita();
                 $("#id_dia_visita").val(data["dia_visita"]);
+                $("#id_cobertura_gramineas").val(data["cobertura_gramineas"]);
+                $("#id_altura_gramineas").val(data["altura_gramineas"]);
+                $("#id_cobertura_leguminosa").val(data["cobertura_leguminosa"]);
+                $("#id_altura_leguminosa").val(data["altura_leguminosa"]);
+                $("#id_punto_optimo").val(data["punto_optimo"]);
+                $("#id_descomp_bonigas").val(data["descomp_bonigas"]);
             }
             //$("#id_num_parcela").val(data["num_parcela"]);
 
@@ -507,18 +522,29 @@ function ocultar_panel_info_lapso(){
     $("#panel_info_lapso").hide("slide",{"direction":"right"},500);
 }
 ///-------
-function mostrar_panel_lapso_visita(){
-    $("#info_lapso_visita").show("slide",{"direction":"left"},500);
-}
-function ocultar_panel_lapso_visita(){
-    $("#info_lapso_visita").hide("slide",{"direction":"left"},500);
-}
+//function mostrar_panel_lapso_visita(){
+//    $("#info_lapso_visita").show("slide",{"direction":"left"},500);
+//}
+//function ocultar_panel_lapso_visita(){
+//    $("#info_lapso_visita").hide("slide",{"direction":"left"},500);
+//}
 ///-------
-function mostrar_panel_lapso_no_visita(){
-    $("#info_lapso_no_visita").show("slide",{"direction":"right"},500);
+//function mostrar_panel_lapso_no_visita(){
+//    $("#info_lapso_no_visita").show("slide",{"direction":"right"},500);
+//}
+//function ocultar_panel_lapso_no_visita(){
+//    $("#info_lapso_no_visita").show("slide",{"direction":"right"},500);
+//}
+
+function mostrar_info_visita(){
+    $(".lapso_datos_entrada_salida").hide();
+    $(".lapso_datos_visita").show();
 }
-function ocultar_panel_lapso_no_visita(){
-    $("#info_lapso_no_visita").show("slide",{"direction":"right"},500);
+
+function mostrar_info_no_visita(){
+    $(".lapso_datos_visita").hide();
+    $(".lapso_datos_entrada_salida").show();
+
 }
 ///-------
 
@@ -558,32 +584,74 @@ function btn_nuevo_lapso(){
     editando_lapso = "";
     ocultar_panel_lapsos();
     mostrar_panel_info_lapso();
+    $("#radio_visita").prop("checked", true);
+    mostrar_info_visita();
+    $("#btn_eliminar_actividad").hide();
     $("#formulario_lapso")[0].reset();
+}
+
+function btn_editar_n_parcela(){
+    $.confirm({
+                title: 'Editar nº parcela',
+                content: 'Introduce el nuevo nº de la parcela:<br><input type="number" id="nuevo_n_parcela_input" required />',
+                buttons: {
+                    confirm: {
+                        text: 'Aplicar',
+                        btnClass: 'btn-blue',
+                        action: function(){
+                            $.ajax({
+                                type: "POST", //<-- Necesario el token_ajax.js
+                                //dataType: "json",
+                                url: "/formulario_parcela_edit",
+                                data:{'num_parcela':this.$content.find("#nuevo_n_parcela_input").val(),'num_parcela_original':editando_parcela},
+                                success: function(data) {
+                                    alert("Número de parcela cambiado con éxito.");
+                                    location.reload();
+//                                    editando_parcela = $("#nuevo_n_parcela_input").val();
+//                                    edited_parcela_geom="";
+
+                                },
+                                error: function (data){
+                                   alert(data);
+                                   console.log(data); // the message
+                                }
+                            });
+                        }
+                    },
+                    cancel: {
+                        text: 'Cancelar',
+                        btnClass: 'btn-red',
+                        action: function(){
+                            //$.alert('Canceled!');
+                        }
+                    }
+                }
+            });
 }
 
 ////--------------------------FORMULARIOS------------------------------------
 
-$("#formulario_parcela").submit(function(e){ //Si se edita una Parcela
-    var form = $(this);
-    //if(validar_form(form)){
-    $.ajax({
-                url: '/formulario_parcela_edit',
-                type: 'POST',
-                data: form.serialize()+"&num_parcela_original="+editando_parcela,
-                success: function(data) {
-                    alert("Cambios aplicados con éxito!");
-                    editando_parcela = $("#id_num_parcela").val();
-                    $("#botones_n_parcela_aceptar").prop('disabled',true);
-                },
-                error: function (data){
-                   alert(data);
-                   console.log(data); // the message
-                }
-    });
-    edited_parcela_geom="";
-    //}
-    e.preventDefault(); //para no ejecutar el actual submit del form
-});
+//$("#formulario_parcela").submit(function(e){ //Si se edita una Parcela
+//    var form = $(this);
+//    //if(validar_form(form)){
+//    $.ajax({
+//                url: '/formulario_parcela_edit',
+//                type: 'POST',
+//                data: form.serialize()+"&num_parcela_original="+editando_parcela,
+//                success: function(data) {
+//                    alert("Cambios aplicados con éxito!");
+//                    editando_parcela = $("#id_num_parcela").val();
+////                    $("#botones_n_parcela_aceptar").prop('disabled',true);
+//                },
+//                error: function (data){
+//                   alert(data);
+//                   console.log(data); // the message
+//                }
+//    });
+//    edited_parcela_geom="";
+//    //}
+//    e.preventDefault(); //para no ejecutar el actual submit del form
+//});
 
 $("#formulario_lapso").submit(function(e){ //Si se edita una Parcela
     var form = $(this);
@@ -610,22 +678,21 @@ $("#formulario_lapso").submit(function(e){ //Si se edita una Parcela
     e.preventDefault(); //para no ejecutar el actual submit del form
 });
 
-$("#id_num_parcela").on("input", function(){
-//    $("#botones_n_parcela *").prop('disabled',false);
-    $("#botones_n_parcela_aceptar").prop('disabled',false);
-
-//        var valor_inicial = $("#id_num_parcela").val();
-//        $.ajax({
-//                url: '/check_n_parcela',
+$("#informe_btn_generar").click(function(e){ //Si se edita una Parcela
+    $("#informe_num_parcela").val($("#id_num_parcela").val());
+    $("#form_generar_informe").submit();
+//    var form = $(this);
+//    $.ajax({
+//                url: '/generar_informe_actividad',
 //                type: 'POST',
-//                data: $("#formulario_parcela").serialize(),//+"&geom="+edited_parcela_geom,
+//                data: form.serialize()+"&num_parcela="+$("#id_num_parcela").val(),
 //                success: function(data) {
-//                    $("#botones_n_parcela *").prop('disabled',false);
 //                },
 //                error: function (data){
-//                   alert("Error: Este numero de parcela ya existe.");
-//                   $("#id_num_parcela").val(valor_inicial);
+//                   alert("Error al generar el archivo, comprueve que los datos de la parcela y su actividad sean correctos.");
+//                   console.log(data); // the message
 //                }
-//
-//        });
+//    });
+    //e.preventDefault(); //para no ejecutar el actual submit del form
 });
+

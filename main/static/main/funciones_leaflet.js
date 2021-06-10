@@ -106,8 +106,6 @@ $(document).ready(function() {
                             data:{'geom_wkt':wkt.write()},
                             success: function(data) {
                                 alert("Parcela creada!");
-                                ocultar_panel_mapa();
-                                mostrar_panel_parcela();
                                 //mostrar_panel_parcela();
 //                                console.log(data);
                                 $("#id_num_parcela").val(data["num_parcela"]);
@@ -116,6 +114,9 @@ $(document).ready(function() {
                                 activar_clicar();
                                 //layer.bindTooltip("my tooltip text").openTooltip();
                                 layer.bindTooltip(""+data["num_parcela"],{permanent: true, direction:"center", interactive:false});//.openTooltip()
+                                ocultar_panel_mapa();
+                                mostrar_panel_parcela();
+                                getinfoparcela(layer.num_parcela);
 //                                var label = layerLabel();
 //                                label.setContent(data["num_parcela"]);
 //                                dsfdsgsg
