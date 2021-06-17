@@ -17,6 +17,7 @@ urlpatterns = [
     path('gparcelas', views.GetParcelas),#para obtener la info básica que mostrar en el mapa
     path('check_n_parcela', views.check_n_parcela),
     path('generar_informe_actividad', views.generar_informe),
+    path('colgar_informe_actividad', views.leer_informe),
 
     # url(r'^login/$', auth_views.login, name='login'),
     # url(r'^logout/$', auth_views.logout, {'next_page': '/base_dades/'}, name='logout'),

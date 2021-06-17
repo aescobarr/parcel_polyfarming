@@ -9,6 +9,16 @@
         <a class="dropdown-item" href="/signout">Cerrar Sesión</a>
       </div>
     </div>
+
+    {% if user.is_authenticated %}
+        {% if user.username  == 'd.martinez' or user.username  == 'j.retana'%}
+            <a id="boton_colgar_fichero" class='btn btn-secondary  btn-lg' href='#'> <i class='bi-upload'></i>   Cargar datos en parcelas</a>
+            <form id="form_colgar_fichero" enctype="multipart/form-data" method="post">
+                <input id="colgar_fichero" hidden type="file" name="fichero" token="{{ csrf_token }}" method="post">
+            </form>
+        {% endif %}
+    {% endif %}
+
 <!--    <div class="btn-group">-->
 <!--        <i class="fa fa-user-circle"></i>-->
 <!--        <a class="navbar-brand btn-lg">{{ user.username }}</a>-->

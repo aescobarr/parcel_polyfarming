@@ -44,6 +44,14 @@ $(document).ready(function() {
            map.setView([41.666141,1.761932], 8);
         }
     });
+
+    $("#boton_colgar_fichero").click(function(){
+        $("#colgar_fichero").click();
+    });
+
+    $("#colgar_fichero").change(function(){
+        $("#form_colgar_fichero").submit();
+    });
 });
 ////--------------------------FUNIONES LEAFLET------------------------------------
 function pasar_wkt(){ // pasa las geometrias a wkt
@@ -87,17 +95,22 @@ function getinfoparcela(num_parcela){
 //                    $("#botones_n_parcela_aceptar").prop('disabled',true);
                     $("#id_num_parcela").val(data["num_parcela"]);
                     $("#info_header_n_parcela").html(data["num_parcela"]);
+                    $("#container_lapsos").html('');
+                    $('#grafico_coberturas').remove();//.html('');
+                    $('#grafico_alturas').remove();//html('');
+                    $('#grafico_altura_pasto_no_comido').remove();//html('');
+                    $('#grafico_num_animales').remove();//html('');
+                    $('#grafico_num_balas').remove();//.html('');
                     //Lapsos/actividad
                     if(data["lapsos"]==""){
                         $("#container_lapsos").html('<p align="center">Sin actividad en esta parcela.</p>');
-                        $("#panel_graficos").html('<div id="grafico_coberturas"></div><div id="grafico_alturas"></div><div id="grafico_altura_pasto_no_comido"></div><div id="grafico_num_animales"></div><div id="grafico_num_balas"></div>');
+                        //$("#panel_graficos").html('<div id="grafico_coberturas"></div><div id="grafico_alturas"></div><div id="grafico_altura_pasto_no_comido"></div><div id="grafico_num_animales"></div><div id="grafico_num_balas"></div>');
                     }else{
                         var array_coberturas=[];
                         var array_alturas=[];
                         var array_altura_pasto_no_comido=[];
                         var array_num_animales=[]
                         var array_num_balas=[]
-                        $("#container_lapsos").html('');
                         $.each(data["lapsos"], function(i, lapso){
                             if(lapso["dia_visita"]==""){
                                 $("#container_lapsos").append('<button type="button" class="btn btn-outline-success col-md-3" onclick="clk_lapso('+lapso["id"]+');"><i class="bi-calendar2-check" style="font-size: 2rem;"></i><br>Actividad animal <br>'+lapso["dia_entrada"]+' a '+lapso["dia_salida"]+'</button>');
@@ -119,6 +132,7 @@ function getinfoparcela(num_parcela){
                                 array_alturas.push([lapso["dia_visita"],lapso["altura_gramineas"],lapso["altura_gramineas"]+"cm",lapso["altura_leguminosa"],lapso["altura_leguminosa"]+"cm"]);
                             }
                         });
+                        $("#panel_graficos").append('<div id="grafico_coberturas"></div><div id="grafico_alturas"></div><div id="grafico_altura_pasto_no_comido"></div><div id="grafico_num_animales"></div><div id="grafico_num_balas"></div>');
                         $('#grafico_coberturas').chartinator({
                             columns: //columnas_coberturas,
                             [
@@ -677,6 +691,59 @@ $("#formulario_lapso").submit(function(e){ //Si se edita una Parcela
     //}
     e.preventDefault(); //para no ejecutar el actual submit del form
 });
+
+$("#form_colgar_fichero").on("submit",function(e){
+    var cargando_fichero = $.alert({
+        closeIcon: false,
+        icon: 'fa fa-spinner fa-spin',
+        title: 'Cargando el fichero. Espere...',
+        content: '',
+        buttons: {
+            buttonA: {
+                text: '',
+                isHidden: true
+            }
+        }
+    });
+
+    e.preventDefault();
+    var datos= new FormData(document.getElementById("form_colgar_fichero"));
+    datos.append("csrfmiddlewaretoken",$("#colgar_fichero").attr("token"));
+    $.ajax({
+        url:"/colgar_informe_actividad",
+        type:"POST",
+        dataType:"json",
+        data:datos,
+        cache:false,
+        contentType: false,
+        processData:false,
+        success:function(data){
+            cargando_fichero.close();
+            //alert(data["errores"]);
+            //console.log(data);
+            if(data["errores"]>0){
+                alert("Error al colgar el archivo. A continuación se mostrará el informe de errores.");
+                var lista_errores="";
+                $.each(data["listado_errores"],function(index,error){
+                    lista_errores+='<div class="alert alert-danger"><i class="fa fa-exclamation-triangle" style="color:orange"></i>'+error+'</div><br>'
+                })
+                $.alert({
+                    closeIcon: true,
+                    title: 'Informe de errores:',
+                    content: lista_errores,
+                });
+            }else{
+                alert("Archivo colgado con éxito!");
+                location.reload();
+            }
+        },
+        error:function(){
+            cargando_fichero.close();
+            alert("Error al colgar el archivo. Contacte con un administrador.");
+        },
+    });
+});
+
 
 $("#informe_btn_generar").click(function(e){ //Si se edita una Parcela
     $("#informe_num_parcela").val($("#id_num_parcela").val());
