@@ -4,6 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Iniciar Sesión</title>
+    <style>
+    body {
+     background-image: url({% static 'main/imagenes/fondo.jpg' %});
+     background-repeat: no-repeat;
+     background-size: auto;
+     }
+    </style>
+
 </head>
 <body>
 <header>
@@ -12,9 +20,11 @@
 <!--    </div>-->
 </header>
 <br>
+<p align="center" style="font-size:8vw;text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;">PASTOREO<img src="{% static 'main/imagenes/logo_polyfarming.png' %}" width="5%"><img src="{% static 'main/imagenes/logo_life.png' %}" width="5%"></p>
+<br>
 <div class="container-fluid">
     <div class="col-md-6 offset-md-3" align="center">
-        <h1 align="center">INICIAR SESIÓN</h1>
+        <h1 align="center" style="text-shadow: -2px 0 white, 0 2px white, 2px 0 white, 0 -2px white;">INICIAR SESIÓN</h1>
         <br>
         {% block content %}
           <form method="post">
