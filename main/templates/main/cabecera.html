@@ -1,5 +1,4 @@
-<nav id="cabecera" class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-
+<nav id="cabecera" class="navbar navbar-expand-md navbar-dark bg-dark fixed-topd-flex justify-content-between" >
     <div class="dropdown show">
       <a class="btn btn-secondary dropdown-toggle navbar-brand btn-lg" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         {{ user.username }}
@@ -18,7 +17,7 @@
             </form>
         {% endif %}
     {% endif %}
-
+    <a onclick="mostrar_ayuda();" class='btn btn-secondary  btn-lg' href='#'> <i class='bi-info-circle'></i>   Ayuda/Tutorial</a>
 <!--    <div class="btn-group">-->
 <!--        <i class="fa fa-user-circle"></i>-->
 <!--        <a class="navbar-brand btn-lg">{{ user.username }}</a>-->

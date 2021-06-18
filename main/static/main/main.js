@@ -594,6 +594,13 @@ function cancelar_editar_parcela(){
 //    $("#panel_parcela").dialog('close');
 //}
 
+function mostrar_ayuda(){
+    $.alert({
+        closeIcon: true,
+        title: 'Información',
+        content: "<div><b>Cabecera:</b><ul><li>Si desea cerrar su sesión, clique donde aparece su nombre de usuario para desplegar dicha opción</li><li>Puede cargar un archivo Excel en formato .xlsx con los datos de las parcelas clicando el botón 'Cargar datos en parcelas', aunque primero ha de dibujarlas.</li></ul></div><div><b>Mapa:</b> <ul><li>Utilice la barra de herramientas ubicada a la izquierda para dibujar y editar parcelas. También dispone de botones para hacer zoom, aunque puede usar la rueda del ratón para dicha función.</li></ul></div><div><b>Información de parcela:</b>Cuando cree una parcela, o clique en una ya creada, se mostrará un menú con informacíón detallada y las siguientes secciones:<ul><li>En la parte superior hay tres botones que le permiten volver al mapa, cambiar el numero asignado a la parcela actual, y finalmente la opción de borrar la parcela junto con toda su actividad.</li><li>En la parte central tenemos las actividades de la parcela ordenadadas por fecha, junto con dos botones que nos permitirán crear una actividad nueva o exportar la información de toda la actividad de la parcela. También puede editar los datos de una actividad o acceder a la opción de borrarla clicando sobre ella.</li><li>Por último, en la parte inferior podremos ver los gráficos generados con la información de las actividades.</li></ul></div>",
+    });
+}
 function btn_nuevo_lapso(){
     editando_lapso = "";
     ocultar_panel_lapsos();
