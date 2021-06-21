@@ -507,6 +507,7 @@ function clk_lapso(id){
 ///-------
 function mostrar_panel_mapa(){
     $("#map").show("slide",{"direction":"right"},500);
+    map.setView([41.666141,1.761932], 8);
 }
 function ocultar_panel_mapa(){
     $("#map").hide("slide",{"direction":"right"},500);
